@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-taller-mtorres-template
+
+  Sample SAM Template for sam-taller-mtorres-template
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    LoggingConfig:
+     LogFormat: JSON
+
+Resources:
+
+  responseApiLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: response-body-layer
+      Description: My Lambda Layer
+      ContentUri: lambdas/Layers/
+      CompatibleRuntimes:
+        - python3.12
+    Metadata:
+      BuildMethod: python3.12
+
+  helloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambdas/hello_world/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref responseApiLayer
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: get
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/hello/"
+  helloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt helloWorldFunction.Arn
+  helloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt helloWorldFunctionRole.Arn
